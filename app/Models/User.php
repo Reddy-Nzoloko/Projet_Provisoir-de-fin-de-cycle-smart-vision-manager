@@ -124,6 +124,112 @@ final class User
         $this->writeAudit($userId, 'deconnexion', 'utilisateurs', $userId);
     }
 
+    public function createPasswordReset(string $username, string $email, string $tokenHash, string $expiresAt): ?string
+    {
+        $statement = $this->connection->prepare(
+            "SELECT id_utilisateur, email FROM utilisateurs
+             WHERE nom_utilisateur = :username AND email = :email AND statut = 'actif'
+             LIMIT 1"
+        );
+        $statement->execute(['username' => $username, 'email' => $email]);
+        $user = $statement->fetch();
+
+        if (!$user) {
+            return null;
+        }
+
+        $this->connection->beginTransaction();
+
+        try {
+            $delete = $this->connection->prepare(
+                'DELETE FROM reinitialisations_mot_de_passe WHERE id_utilisateur = :user_id'
+            );
+            $delete->execute(['user_id' => $user['id_utilisateur']]);
+
+            $insert = $this->connection->prepare(
+                'INSERT INTO reinitialisations_mot_de_passe (id_utilisateur, jeton_hash, expire_le)
+                 VALUES (:user_id, :token_hash, :expires_at)'
+            );
+            $insert->execute([
+                'user_id' => $user['id_utilisateur'],
+                'token_hash' => $tokenHash,
+                'expires_at' => $expiresAt,
+            ]);
+            $this->connection->commit();
+
+            return (string) $user['email'];
+        } catch (\Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
+    public function deletePasswordReset(string $tokenHash): void
+    {
+        $statement = $this->connection->prepare(
+            'DELETE FROM reinitialisations_mot_de_passe WHERE jeton_hash = :token_hash'
+        );
+        $statement->execute(['token_hash' => $tokenHash]);
+    }
+
+    public function isPasswordResetValid(string $tokenHash): bool
+    {
+        $statement = $this->connection->prepare(
+            'SELECT 1 FROM reinitialisations_mot_de_passe
+             WHERE jeton_hash = :token_hash AND expire_le > UTC_TIMESTAMP()
+             LIMIT 1'
+        );
+        $statement->execute(['token_hash' => $tokenHash]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
+    public function resetPassword(string $tokenHash, string $password): bool
+    {
+        $this->connection->beginTransaction();
+
+        try {
+            $statement = $this->connection->prepare(
+                'SELECT id_utilisateur FROM reinitialisations_mot_de_passe
+                 WHERE jeton_hash = :token_hash AND expire_le > UTC_TIMESTAMP()
+                 FOR UPDATE'
+            );
+            $statement->execute(['token_hash' => $tokenHash]);
+            $userId = $statement->fetchColumn();
+
+            if ($userId === false) {
+                $this->connection->rollBack();
+                return false;
+            }
+
+            $update = $this->connection->prepare(
+                'UPDATE utilisateurs SET mot_de_passe = :password_hash WHERE id_utilisateur = :user_id'
+            );
+            $update->execute([
+                'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                'user_id' => $userId,
+            ]);
+
+            $delete = $this->connection->prepare(
+                'DELETE FROM reinitialisations_mot_de_passe WHERE id_utilisateur = :user_id'
+            );
+            $delete->execute(['user_id' => $userId]);
+            $this->writeAudit((int) $userId, 'reinitialisation_mot_de_passe', 'utilisateurs', (int) $userId);
+            $this->connection->commit();
+
+            return true;
+        } catch (\Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
     private function writeAudit(int $userId, string $action, string $entity, int $entityId): void
     {
         $statement = $this->connection->prepare(

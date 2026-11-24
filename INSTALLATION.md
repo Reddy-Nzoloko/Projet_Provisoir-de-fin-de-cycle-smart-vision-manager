@@ -18,7 +18,16 @@
    - `DB_USERNAME` (par défaut `root`)
    - `DB_PASSWORD` (par défaut vide, configuration locale XAMPP uniquement)
 
-3. Ouvrez l’application via Apache, par exemple `http://localhost/Smart_vision_Manager/`.
+3. Configurez l’envoi des liens de réinitialisation dans l’environnement PHP :
+
+   - `APP_BASE_URL` (par exemple `http://localhost/Smart_vision_Manager` en local, ou l’URL HTTPS publique en production)
+   - `MAIL_FROM` (adresse d’expédition valide, par exemple `noreply@example.com`)
+
+   L’envoi utilise la fonction `mail()` de PHP. Configurez son transport dans `php.ini` (ou un relais SMTP local) et vérifiez-le avant utilisation. Le compte doit avoir une adresse e-mail enregistrée.
+
+4. Ouvrez l’application via Apache, par exemple `http://localhost/Smart_vision_Manager/`.
+
+5. Pour ajouter la récupération de mot de passe à une base déjà installée, exécutez `database/migrations/001_password_resets.sql`. Ne relancez pas `script.sql` sur une base contenant des données : il supprime les tables existantes.
 
 Le schéma initialise les rôles mais aucun compte. Lors de la première visite, ouvrez « Créer le compte administrateur » sur la page de connexion : cette configuration n’est possible que tant qu’aucun utilisateur n’existe. Le mot de passe (12 à 72 octets) est haché avec `password_hash()`. Les connexions sont réservées aux comptes actifs; les connexions, déconnexions et la création initiale sont inscrites au journal d’audit.
 

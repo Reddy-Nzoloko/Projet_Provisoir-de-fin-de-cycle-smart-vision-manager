@@ -56,6 +56,7 @@ $success = \App\Core\Session::consumeFlash('success');
                         <div>
                             <label for="password" class="block text-sm font-medium">Mot de passe</label>
                             <input id="password" name="password" type="password" required autocomplete="current-password" class="mt-2 block w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-stone-400 focus:border-stone-500 focus:ring-4 focus:ring-stone-100" placeholder="Votre mot de passe">
+                            <a href="index.php?action=forgot-password" class="mt-2 inline-block text-sm font-medium text-stone-600 underline decoration-stone-300 underline-offset-4 hover:text-stone-950">Mot de passe oublié ?</a>
                         </div>
                         <button type="submit" class="flex w-full items-center justify-center rounded-xl bg-stone-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-800 focus:outline-none focus:ring-4 focus:ring-stone-300">Se connecter <span class="ml-2" aria-hidden="true">→</span></button>
                     </form>

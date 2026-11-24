@@ -30,13 +30,15 @@ try {
         exit;
     }
 
-    if ($action === 'login' || $action === 'setup' || $action === 'logout') {
+    if (in_array($action, ['login', 'setup', 'logout', 'forgot-password', 'reset-password'], true)) {
         $controller = new AuthController($users);
 
         match ($action) {
             'login' => $controller->login(),
             'setup' => $controller->setup(),
             'logout' => $controller->logout(),
+            'forgot-password' => $controller->requestPasswordReset(),
+            'reset-password' => $controller->resetPassword(),
         };
         exit;
     }
