@@ -31,12 +31,12 @@ $monthName = strtr($monthName, $frenchMonths);
 
 $navigation = [
     ['label' => 'Vue d’ensemble', 'icon' => 'grid', 'active' => true],
-    ['label' => 'Clients', 'icon' => 'users'],
-    ['label' => 'Réseau', 'icon' => 'network'],
-    ['label' => 'Équipements', 'icon' => 'server'],
-    ['label' => 'Abonnements', 'icon' => 'layers'],
-    ['label' => 'Facturation', 'icon' => 'receipt'],
-    ['label' => 'Incidents', 'icon' => 'alert'],
+    ['label' => 'Clients', 'icon' => 'users', 'active' => false],
+    ['label' => 'Réseau', 'icon' => 'network', 'active' => false],
+    ['label' => 'Équipements', 'icon' => 'server', 'active' => false],
+    ['label' => 'Abonnements', 'icon' => 'layers', 'active' => false],
+    ['label' => 'Facturation', 'icon' => 'receipt', 'active' => false],
+    ['label' => 'Incidents', 'icon' => 'alert', 'active' => false],
 ];
 
 $incidentLabels = [
