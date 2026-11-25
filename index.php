@@ -8,8 +8,10 @@ require __DIR__ . '/app/Core/Auth.php';
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/app/Models/User.php';
 require __DIR__ . '/app/Models/Dashboard.php';
+require __DIR__ . '/app/Models/Equipment.php';
 require __DIR__ . '/app/Controllers/AuthController.php';
 require __DIR__ . '/app/Controllers/DashboardController.php';
+require __DIR__ . '/app/Controllers/EquipmentController.php';
 
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
@@ -17,6 +19,7 @@ use App\Core\Auth;
 use App\Core\Database;
 use App\Core\Session;
 use App\Models\Dashboard;
+use App\Models\Equipment;
 use App\Models\User;
 
 try {
@@ -41,6 +44,22 @@ try {
             'forgot-password' => $controller->requestPasswordReset(),
             'reset-password' => $controller->resetPassword(),
         };
+        exit;
+    }
+
+    if ($action === 'equipements') {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            header('Allow: GET, POST');
+            exit;
+        }
+
+        if (Auth::user() === null) {
+            header('Location: index.php?action=login', true, 303);
+            exit;
+        }
+
+        (new \App\Controllers\EquipmentController(new Equipment($connection)))->index();
         exit;
     }
 

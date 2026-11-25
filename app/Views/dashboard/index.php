@@ -33,7 +33,7 @@ $navigation = [
     ['label' => 'Vue d’ensemble', 'icon' => 'grid', 'active' => true],
     ['label' => 'Clients', 'icon' => 'users', 'active' => false],
     ['label' => 'Réseau', 'icon' => 'network', 'active' => false],
-    ['label' => 'Équipements', 'icon' => 'server', 'active' => false],
+    ['label' => 'Équipements', 'icon' => 'server', 'active' => false, 'action' => 'equipements'],
     ['label' => 'Abonnements', 'icon' => 'layers', 'active' => false],
     ['label' => 'Facturation', 'icon' => 'receipt', 'active' => false],
     ['label' => 'Incidents', 'icon' => 'alert', 'active' => false],
@@ -99,6 +99,11 @@ $incidentStyles = [
                 <?php foreach ($navigation as $item): ?>
                     <?php if ($item['active']): ?>
                         <a href="index.php" aria-current="page" class="flex items-center gap-3 rounded-xl bg-stone-950 px-3 py-2.5 text-sm font-medium text-white">
+                            <span class="w-5 text-center" aria-hidden="true">◈</span>
+                            <?= $escape($item['label']) ?>
+                        </a>
+                    <?php elseif (isset($item['action'])): ?>
+                        <a href="index.php?action=<?= $escape($item['action']) ?>" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-stone-600 transition hover:bg-stone-100">
                             <span class="w-5 text-center" aria-hidden="true">◈</span>
                             <?= $escape($item['label']) ?>
                         </a>
