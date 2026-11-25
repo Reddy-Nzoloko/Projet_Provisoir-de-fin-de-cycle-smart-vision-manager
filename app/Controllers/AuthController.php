@@ -257,23 +257,54 @@ final class AuthController
     {
         $baseUrl = getenv('APP_BASE_URL');
         $sender = getenv('MAIL_FROM');
+        $smtpHost = getenv('SMTP_HOST');
+        $smtpPort = getenv('SMTP_PORT');
+        $smtpUsername = getenv('SMTP_USERNAME');
+        $smtpPassword = getenv('SMTP_PASSWORD');
+        $smtpEncryption = getenv('SMTP_ENCRYPTION');
         $parts = is_string($baseUrl) ? parse_url($baseUrl) : false;
 
         if (!is_string($baseUrl) || !is_array($parts)
             || !in_array($parts['scheme'] ?? '', ['http', 'https'], true)
             || empty($parts['host']) || isset($parts['query']) || isset($parts['fragment'])
-            || !is_string($sender) || filter_var($sender, FILTER_VALIDATE_EMAIL) === false) {
+            || !is_string($sender) || filter_var($sender, FILTER_VALIDATE_EMAIL) === false
+            || !is_string($smtpHost) || $smtpHost === ''
+            || !is_string($smtpPort) || filter_var($smtpPort, FILTER_VALIDATE_INT) === false
+            || (int) $smtpPort < 1 || (int) $smtpPort > 65535
+            || !is_string($smtpUsername) || $smtpUsername === ''
+            || !is_string($smtpPassword) || $smtpPassword === ''
+            || !in_array($smtpEncryption, ['tls', 'ssl'], true)) {
             return false;
         }
 
         $url = rtrim($baseUrl, '/') . '/index.php?action=reset-password&token=' . rawurlencode($token);
-        $subject = 'Réinitialisation de votre mot de passe';
         $message = "Bonjour,\n\n"
             . "Une demande de réinitialisation du mot de passe de votre compte Smart Vision Manager a été faite.\n"
             . "Pour choisir un nouveau mot de passe dans l’heure, ouvrez ce lien :\n{$url}\n\n"
             . "Si vous n’êtes pas à l’origine de cette demande, ignorez ce message.\n";
-        $headers = "From: {$sender}\r\nContent-Type: text/plain; charset=UTF-8";
 
-        return mail($email, $subject, $message, $headers);
+        try {
+            $mailer = new \PHPMailer\PHPMailer\PHPMailer(true);
+            $mailer->isSMTP();
+            $mailer->Host = $smtpHost;
+            $mailer->SMTPAuth = true;
+            $mailer->Username = $smtpUsername;
+            $mailer->Password = $smtpPassword;
+            $mailer->SMTPSecure = $smtpEncryption === 'ssl'
+                ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+                : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mailer->Port = (int) $smtpPort;
+            $mailer->CharSet = 'UTF-8';
+            $mailer->setFrom($sender, 'Smart Vision Manager');
+            $mailer->addAddress($email);
+            $mailer->Subject = 'Réinitialisation de votre mot de passe';
+            $mailer->Body = $message;
+
+            return $mailer->send();
+        } catch (\Throwable $exception) {
+            error_log('Smart Vision Manager SMTP error: ' . $exception->getMessage());
+
+            return false;
+        }
     }
 }

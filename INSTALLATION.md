@@ -22,8 +22,10 @@
 
    - `APP_BASE_URL` (par exemple `http://localhost/Smart_vision_Manager` en local, ou l’URL HTTPS publique en production)
    - `MAIL_FROM` (adresse d’expédition valide, par exemple `noreply@example.com`)
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`
+   - `SMTP_ENCRYPTION` (`tls` pour le port 587 ou `ssl` pour le port 465)
 
-   L’envoi utilise la fonction `mail()` de PHP. Configurez son transport dans `php.ini` (ou un relais SMTP local) et vérifiez-le avant utilisation. Le compte doit avoir une adresse e-mail enregistrée.
+   L’envoi utilise PHPMailer via SMTP authentifié. Pour Gmail, utilisez `smtp.gmail.com`, le port `587`, le chiffrement `tls` et un mot de passe d’application Google (pas le mot de passe normal du compte). Configurez ces variables dans l’environnement Windows utilisé par Apache, puis redémarrez Apache. Ne mettez jamais le mot de passe SMTP dans les fichiers suivis par Git. Le compte utilisateur doit aussi avoir une adresse e-mail enregistrée.
 
 4. Ouvrez l’application via Apache, par exemple `http://localhost/Smart_vision_Manager/`.
 
