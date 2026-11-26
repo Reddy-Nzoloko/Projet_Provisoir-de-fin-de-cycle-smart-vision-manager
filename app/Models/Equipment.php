@@ -45,10 +45,10 @@ final class Equipment
         $statement = $this->connection->prepare(
             "INSERT INTO equipements
              (id_station, nom_equipement, code_equipement, type_equipement, fabricant, modele,
-              numero_serie, adresse_ip_gestion, adresse_mac, role_equipement, statut, date_installation, notes)
+              numero_serie, adresse_ip_gestion, masque_sous_reseau, adresse_mac, role_equipement, statut, date_installation, notes)
              VALUES
              (:id_station, :nom_equipement, :code_equipement, :type_equipement, :fabricant, :modele,
-              :numero_serie, :adresse_ip_gestion, :adresse_mac, :role_equipement, :statut, :date_installation, :notes)"
+              :numero_serie, :adresse_ip_gestion, :masque_sous_reseau, :adresse_mac, :role_equipement, :statut, :date_installation, :notes)"
         );
         $statement->execute($data);
     }
@@ -65,6 +65,7 @@ final class Equipment
              modele = :modele,
              numero_serie = :numero_serie,
              adresse_ip_gestion = :adresse_ip_gestion,
+             masque_sous_reseau = :masque_sous_reseau,
              adresse_mac = :adresse_mac,
              role_equipement = :role_equipement,
              statut = :statut,

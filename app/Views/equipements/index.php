@@ -22,7 +22,7 @@ if ($letters !== '') {
 $form = $editing ?? [
     'id_equipement' => '', 'id_station' => '', 'nom_equipement' => '', 'code_equipement' => '',
     'type_equipement' => 'autre', 'fabricant' => '', 'modele' => '', 'numero_serie' => '',
-    'adresse_ip_gestion' => '', 'adresse_mac' => '', 'role_equipement' => 'autre',
+    'adresse_ip_gestion' => '', 'masque_sous_reseau' => '', 'adresse_mac' => '', 'role_equipement' => 'autre',
     'statut' => 'actif', 'date_installation' => '', 'notes' => '',
 ];
 ?>
@@ -72,11 +72,12 @@ $form = $editing ?? [
             <div class="mt-4 grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-medium" for="type_equipement">Type</label>
-                    <select id="type_equipement" name="type_equipement" class="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm">
+                    <input id="type_equipement" name="type_equipement" list="types_equipement" maxlength="100" value="<?= $escape($form['type_equipement']) ?>" class="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm" placeholder="Choisir ou saisir un type">
+                    <datalist id="types_equipement">
                         <?php foreach (['routeur_central', 'routeur_client', 'antenne_ptp', 'point_acces', 'switch', 'starlink', 'serveur', 'autre'] as $value): ?>
-                            <option value="<?= $escape($value) ?>" <?= $form['type_equipement'] === $value ? 'selected' : '' ?>><?= $escape(str_replace('_', ' ', ucfirst($value))) ?></option>
+                            <option value="<?= $escape($value) ?>"><?= $escape(str_replace('_', ' ', ucfirst($value))) ?></option>
                         <?php endforeach; ?>
-                    </select>
+                    </datalist>
                 </div>
                 <div>
                     <label class="block text-sm font-medium" for="statut">Statut</label>
@@ -108,6 +109,7 @@ $form = $editing ?? [
 
             <div class="mt-4 grid grid-cols-2 gap-3">
                 <div><label class="block text-sm font-medium" for="adresse_ip_gestion">IP gestion</label><input id="adresse_ip_gestion" name="adresse_ip_gestion" maxlength="45" value="<?= $escape($form['adresse_ip_gestion']) ?>" class="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm"></div>
+                <div><label class="block text-sm font-medium" for="masque_sous_reseau">Masque / préfixe</label><input id="masque_sous_reseau" name="masque_sous_reseau" maxlength="45" value="<?= $escape($form['masque_sous_reseau'] ?? '') ?>" class="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm" placeholder="255.255.255.0 ou /24"></div>
                 <div><label class="block text-sm font-medium" for="adresse_mac">Adresse MAC</label><input id="adresse_mac" name="adresse_mac" maxlength="17" value="<?= $escape($form['adresse_mac']) ?>" class="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm" placeholder="AA:BB:CC:DD:EE:FF"></div>
             </div>
 
@@ -129,15 +131,21 @@ $form = $editing ?? [
             <div class="border-b border-stone-100 px-5 py-4"><h2 class="text-sm font-semibold"><?= count($equipments) ?> équipement<?= count($equipments) > 1 ? 's' : '' ?></h2></div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead class="border-b border-stone-100 text-xs uppercase text-stone-400"><tr><th class="px-5 py-3">Équipement</th><th class="px-5 py-3">Type</th><th class="px-5 py-3">Adresse IP</th><th class="px-5 py-3">Statut</th><th class="px-5 py-3">Station</th><th class="px-5 py-3 text-right">Actions</th></tr></thead>
+                    <thead class="border-b border-stone-100 text-xs uppercase text-stone-400"><tr><th class="px-5 py-3">Équipement</th><th class="px-5 py-3">Type</th><th class="px-5 py-3">Adresse IP</th><th class="px-5 py-3">Date d’entrée</th><th class="px-5 py-3">Statut</th><th class="px-5 py-3">Station</th><th class="px-5 py-3 text-right">Actions</th></tr></thead>
                     <tbody>
                     <?php if ($equipments === []): ?>
-                        <tr><td colspan="6" class="px-5 py-12 text-center text-stone-500">Aucun équipement enregistré.</td></tr>
+                        <tr><td colspan="7" class="px-5 py-12 text-center text-stone-500">Aucun équipement enregistré.</td></tr>
                     <?php else: foreach ($equipments as $item): ?>
                         <tr class="border-b border-stone-100 last:border-0">
                             <td class="px-5 py-4"><div class="font-medium"><?= $escape($item['nom_equipement']) ?></div><div class="mt-1 text-xs text-stone-400"><?= $escape($item['code_equipement']) ?></div></td>
                             <td class="px-5 py-4 text-stone-600"><?= $escape(str_replace('_', ' ', ucfirst($item['type_equipement']))) ?></td>
-                            <td class="px-5 py-4 font-mono text-sm text-stone-700"><?= $escape($item['adresse_ip_gestion'] ?: 'Non renseignée') ?></td>
+                            <td class="px-5 py-4 font-mono text-sm text-stone-700">
+                                <?= $escape($item['adresse_ip_gestion'] ?: 'Non renseignée') ?>
+                                <?php if ($item['adresse_ip_gestion'] && $item['masque_sous_reseau']): ?>
+                                    <div class="mt-1 text-xs text-stone-500"><?= $escape($item['masque_sous_reseau']) ?></div>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-5 py-4 text-stone-600"><?= $item['date_installation'] ? $escape(date('d/m/Y', strtotime($item['date_installation']))) : 'Non renseignée' ?></td>
                             <td class="px-5 py-4"><?= $escape(str_replace('_', ' ', ucfirst($item['statut']))) ?></td>
                             <td class="px-5 py-4 text-stone-600"><?= $escape($item['nom_station'] ?: 'Non affecté') ?></td>
                             <td class="px-5 py-4">

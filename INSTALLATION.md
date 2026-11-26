@@ -29,7 +29,7 @@
 
 4. Ouvrez l’application via Apache, par exemple `http://localhost/Smart_vision_Manager/`.
 
-5. Pour ajouter la récupération de mot de passe à une base déjà installée, exécutez `database/migrations/001_password_resets.sql`. Ne relancez pas `script.sql` sur une base contenant des données : il supprime les tables existantes.
+5. Pour mettre à jour une base déjà installée, exécutez `database/migrations/001_password_resets.sql` pour la récupération de mot de passe, `database/migrations/003_custom_equipment_types.sql` pour les types d’équipement personnalisés et `database/migrations/004_equipment_subnet_mask.sql` pour le masque de sous-réseau des équipements. Ne relancez pas `script.sql` sur une base contenant des données : il supprime les tables existantes.
 
 Le schéma initialise les rôles mais aucun compte. Lors de la première visite, ouvrez « Créer le compte administrateur » sur la page de connexion : cette configuration n’est possible que tant qu’aucun utilisateur n’existe. Le mot de passe (12 à 72 octets) est haché avec `password_hash()`. Les connexions sont réservées aux comptes actifs; les connexions, déconnexions et la création initiale sont inscrites au journal d’audit.
 

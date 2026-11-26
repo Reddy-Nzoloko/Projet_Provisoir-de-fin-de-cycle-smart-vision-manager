@@ -113,6 +113,11 @@ final class EquipmentController
             return 'Saisissez un code équipement (60 caractères maximum).';
         }
 
+        $type = trim($this->postString('type_equipement'));
+        if ($type === '' || strlen($type) > 100) {
+            return 'Saisissez un type d’équipement (100 caractères maximum).';
+        }
+
         $mac = trim($this->postString('adresse_mac'));
         if ($mac !== '' && !preg_match('/^(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/', $mac)) {
             return 'Saisissez une adresse MAC au format AA:BB:CC:DD:EE:FF.';
@@ -123,7 +128,45 @@ final class EquipmentController
             return 'Saisissez une adresse IP valide.';
         }
 
+        $subnetMask = trim($this->postString('masque_sous_reseau'));
+        if ($ip !== '' && $subnetMask === '') {
+            return 'Saisissez le masque ou le préfixe du sous-réseau.';
+        }
+
+        if ($ip === '' && $subnetMask !== '') {
+            return 'Saisissez une adresse IP avant son masque de sous-réseau.';
+        }
+
+        if ($subnetMask !== '' && !$this->isValidSubnetMask($ip, $subnetMask)) {
+            return 'Saisissez un masque compatible avec l’adresse IP (ex. 255.255.255.0 ou /24).';
+        }
+
         return null;
+    }
+
+    private function isValidSubnetMask(string $ip, string $mask): bool
+    {
+        if (preg_match('/^\/?\d{1,3}$/', $mask) === 1) {
+            $prefixLength = (int) ltrim($mask, '/');
+            $maximumPrefixLength = str_contains($ip, ':') ? 128 : 32;
+
+            return $prefixLength <= $maximumPrefixLength;
+        }
+
+        if (str_contains($ip, ':')) {
+            return false;
+        }
+
+        if (filter_var($mask, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
+            return false;
+        }
+
+        $binaryMask = '';
+        foreach (explode('.', $mask) as $octet) {
+            $binaryMask .= str_pad(decbin((int) $octet), 8, '0', STR_PAD_LEFT);
+        }
+
+        return preg_match('/^1*0*$/', $binaryMask) === 1;
     }
 
     private function data(): array
@@ -134,11 +177,12 @@ final class EquipmentController
             'id_station' => $stationId === '' ? null : (int) $stationId,
             'nom_equipement' => trim($this->postString('nom_equipement')),
             'code_equipement' => trim($this->postString('code_equipement')),
-            'type_equipement' => $this->postString('type_equipement'),
+            'type_equipement' => trim($this->postString('type_equipement')),
             'fabricant' => $this->nullable('fabricant'),
             'modele' => $this->nullable('modele'),
             'numero_serie' => $this->nullable('numero_serie'),
             'adresse_ip_gestion' => $this->nullable('adresse_ip_gestion'),
+            'masque_sous_reseau' => $this->nullable('masque_sous_reseau'),
             'adresse_mac' => $this->nullable('adresse_mac'),
             'role_equipement' => $this->postString('role_equipement'),
             'statut' => $this->postString('statut'),
