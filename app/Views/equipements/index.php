@@ -55,12 +55,13 @@ $form = $editing ?? [
     <?php endif; ?>
 
     <section class="mt-7 grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
-        <form action="index.php?action=equipements" method="post" class="h-fit rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+        <form action="index.php?action=equipements" method="post" data-equipment-form class="h-fit rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
             <input type="hidden" name="csrf_token" value="<?= $escape(\App\Core\Session::csrfToken()) ?>">
             <input type="hidden" name="operation" value="<?= $editing ? 'update' : 'create' ?>">
             <input type="hidden" name="id_equipement" value="<?= $escape($form['id_equipement']) ?>">
 
             <h2 class="text-sm font-semibold"><?= $editing ? 'Modifier l’équipement' : 'Nouvel équipement' ?></h2>
+            <p data-submit-feedback class="mt-3 hidden rounded-lg px-3 py-2 text-sm" role="status" aria-live="polite"></p>
 
             <label class="mt-5 block text-sm font-medium" for="nom_equipement">Nom *</label>
             <input id="nom_equipement" name="nom_equipement" required maxlength="150" value="<?= $escape($form['nom_equipement']) ?>" class="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm">
@@ -128,14 +129,15 @@ $form = $editing ?? [
             <div class="border-b border-stone-100 px-5 py-4"><h2 class="text-sm font-semibold"><?= count($equipments) ?> équipement<?= count($equipments) > 1 ? 's' : '' ?></h2></div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead class="border-b border-stone-100 text-xs uppercase text-stone-400"><tr><th class="px-5 py-3">Équipement</th><th class="px-5 py-3">Type</th><th class="px-5 py-3">Statut</th><th class="px-5 py-3">Station</th><th class="px-5 py-3 text-right">Actions</th></tr></thead>
+                    <thead class="border-b border-stone-100 text-xs uppercase text-stone-400"><tr><th class="px-5 py-3">Équipement</th><th class="px-5 py-3">Type</th><th class="px-5 py-3">Adresse IP</th><th class="px-5 py-3">Statut</th><th class="px-5 py-3">Station</th><th class="px-5 py-3 text-right">Actions</th></tr></thead>
                     <tbody>
                     <?php if ($equipments === []): ?>
-                        <tr><td colspan="5" class="px-5 py-12 text-center text-stone-500">Aucun équipement enregistré.</td></tr>
+                        <tr><td colspan="6" class="px-5 py-12 text-center text-stone-500">Aucun équipement enregistré.</td></tr>
                     <?php else: foreach ($equipments as $item): ?>
                         <tr class="border-b border-stone-100 last:border-0">
                             <td class="px-5 py-4"><div class="font-medium"><?= $escape($item['nom_equipement']) ?></div><div class="mt-1 text-xs text-stone-400"><?= $escape($item['code_equipement']) ?></div></td>
                             <td class="px-5 py-4 text-stone-600"><?= $escape(str_replace('_', ' ', ucfirst($item['type_equipement']))) ?></td>
+                            <td class="px-5 py-4 font-mono text-sm text-stone-700"><?= $escape($item['adresse_ip_gestion'] ?: 'Non renseignée') ?></td>
                             <td class="px-5 py-4"><?= $escape(str_replace('_', ' ', ucfirst($item['statut']))) ?></td>
                             <td class="px-5 py-4 text-stone-600"><?= $escape($item['nom_station'] ?: 'Non affecté') ?></td>
                             <td class="px-5 py-4">
@@ -157,5 +159,28 @@ $form = $editing ?? [
         </section>
     </section>
 </main>
+<script>
+    const equipmentForm = document.querySelector('[data-equipment-form]');
+    const submitFeedback = equipmentForm.querySelector('[data-submit-feedback]');
+    const submitButton = equipmentForm.querySelector('button[type="submit"]');
+
+    equipmentForm.addEventListener('invalid', () => {
+        submitFeedback.textContent = 'Veuillez corriger les champs signalés, notamment le nom et le code, avant d’enregistrer.';
+        submitFeedback.classList.remove('hidden', 'bg-stone-100', 'text-stone-700');
+        submitFeedback.classList.add('bg-amber-50', 'text-amber-900');
+    }, true);
+
+    equipmentForm.addEventListener('input', () => {
+        submitFeedback.classList.add('hidden');
+    });
+
+    equipmentForm.addEventListener('submit', () => {
+        submitFeedback.textContent = 'Enregistrement en cours…';
+        submitFeedback.classList.remove('hidden', 'bg-amber-50', 'text-amber-900');
+        submitFeedback.classList.add('bg-stone-100', 'text-stone-700');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Enregistrement…';
+    });
+</script>
 </body>
 </html>
